@@ -5,7 +5,7 @@
 # The servers have no Node/npm, so the compiled Tailwind CSS must be built
 # here and shipped through git. This script does that, then on each server:
 #   git pull -> pip install (venv) -> migrate -> collectstatic -> chown ->
-#   reload the portal mod_wsgi daemon.
+#   reload the portal gunicorn service (systemd: portal-gunicorn.service).
 #
 # Usage:
 #   ./deploy.sh                 # full deploy (build + push + deploy both servers)
@@ -95,13 +95,33 @@ for host in $SERVERS; do
     echo "  - collectstatic"
     venv/bin/python manage.py collectstatic --noinput >/dev/null
 
-    echo "  - chown static/ media/ -> www-data"
-    chown -R www-data:www-data "$REPO_DIR/static" "$REPO_DIR/media" 2>/dev/null || true
+    # Must chown the WHOLE tree: gunicorn runs as www-data and writes
+    # django_errors.log at the repo root; git pull (as root) leaves new files
+    # root-owned, which breaks the logging FileHandler and stops boot.
+    echo "  - chown $REPO_DIR -> www-data"
+    chown -R www-data:www-data "$REPO_DIR"
 
-    echo "  - reload portal wsgi daemon (touch wsgi.py)"
-    touch "$REPO_DIR/portal/wsgi.py"
+    # gunicorn isn't run with --reload, so touching wsgi.py does nothing.
+    # HUP reloads gracefully; fall back to a full restart if reload is unsupported.
+    echo "  - reload portal gunicorn"
+    systemctl reload portal-gunicorn 2>/dev/null || systemctl restart portal-gunicorn
 
-    echo "  - HEAD now $(git rev-parse --short HEAD)"
+    # Health check: fail this host if the app didn't come back up, so a bad
+    # deploy is caught here instead of silently serving stale/broken code.
+    sleep 2
+    if ! systemctl is-active --quiet portal-gunicorn; then
+      echo "  portal-gunicorn is NOT active after reload:" >&2
+      systemctl status portal-gunicorn --no-pager -l 2>&1 | tail -15 >&2
+      exit 1
+    fi
+    code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: portal.amsfusion.com' \
+      http://127.0.0.1:8002/accounts/login/)
+    if [[ "${code:-000}" -ge 500 || "${code:-000}" == "000" ]]; then
+      echo "  app unhealthy after reload (login page HTTP $code)" >&2
+      exit 1
+    fi
+
+    echo "  - app healthy (login HTTP $code); HEAD now $(git rev-parse --short HEAD)"
 REMOTE
   then
     ok "$host done"
