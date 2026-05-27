@@ -85,6 +85,22 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# In production, give static files content-hashed names (e.g. styles.a1b2c3.css)
+# so any CSS/JS change is a new URL — no Cloudflare purge or browser hard-refresh
+# needed. Use plain storage in DEBUG so `runserver` works without collectstatic.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': (
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+            if DEBUG else
+            'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+        ),
+    },
+}
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/accounts/login/'
