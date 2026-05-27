@@ -12,7 +12,7 @@ EXTRA_FIELD_CHOICES = {
     "assembled_bonded": "Assembled & Bonded",
     "implant_type": "Implant Type",
     "implant_size": "Implant Size",
-    "tibase_type": "Ti-Base Type",
+    "tibase_type": "Scan Flag/Body Brand",
     "number_of_units": "Number of Units",
     "is_screw_retained": "Is Screw-Retained",
     "bar_details": "Bar Details",
@@ -93,8 +93,8 @@ class TiBaseType(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Ti-Base Type"
-        verbose_name_plural = "Ti-Base Types"
+        verbose_name = "Scan Flag/Body Brand"
+        verbose_name_plural = "Scan Flag/Body Brands"
         ordering = ["name"]
 
     def __str__(self):
