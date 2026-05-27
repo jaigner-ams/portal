@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}New Restoration — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div>
+    <h1 class="text-2xl font-semibold tracking-tight">New Restoration</h1>
+    <p class="text-sm text-muted-foreground mt-1">
+      Enter the patient details and the first restoration. A new case is created, and
+      you can add more restorations to it afterward.
+    </p>
+  </div>
+
+  <div class="separator"></div>
+
+  <form method="post" class="space-y-6 max-w-2xl">
+    {% csrf_token %}
+
+    {# --- Patient / case --- #}
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Patient &amp; Case</h2>
+        <p class="card-description">Captured once for this case.</p>
+      </div>
+      <div class="card-content space-y-5">
+
+        {% if case_form.non_field_errors %}
+        <div class="alert-destructive text-sm">
+          {% for error in case_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="space-y-2">
+          <label for="{{ case_form.patient_name.id_for_label }}" class="label">
+            Patient Name <span class="text-destructive">*</span>
+          </label>
+          {{ case_form.patient_name }}
+          {% for error in case_form.patient_name.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="space-y-2">
+          <label for="{{ case_form.shipping_method.id_for_label }}" class="label">
+            Shipping Method <span class="text-destructive">*</span>
+          </label>
+          {{ case_form.shipping_method }}
+          {% for error in case_form.shipping_method.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div class="space-y-2">
+          <label for="{{ case_form.mill_priority.id_for_label }}" class="label">Mill Priority</label>
+          {{ case_form.mill_priority }}
+          {% for error in case_form.mill_priority.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+        </div>
+
+      </div>
+    </div>
+
+    {# --- Restoration --- #}
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Restoration</h2>
+        <p class="card-description">Fields adjust based on the restoration type.</p>
+      </div>
+      <div class="card-content space-y-5">
+        {% include "restorations/_restoration_fields.html" %}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" class="btn-primary">Create case &amp; add restoration</button>
+      <a href="/" class="btn-ghost">Cancel</a>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'restorations/js/restoration_form.js' %}"></script>
+{% endblock %}

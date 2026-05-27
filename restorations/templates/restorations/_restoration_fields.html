@@ -1,0 +1,135 @@
+{% comment %}
+Shared restoration field rows. Expects `restoration_form` in context.
+Each field is wrapped in `.field-<name>` so restoration_form.js can toggle
+visibility, mirroring the admin form's dynamic behavior.
+{% endcomment %}
+
+{% if restoration_form.non_field_errors %}
+<div class="alert-destructive text-sm">
+  {% for error in restoration_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
+
+{# --- Core fields --- #}
+<div class="field-restoration_type space-y-2">
+  <label for="{{ restoration_form.restoration_type.id_for_label }}" class="label">
+    Restoration Type <span class="text-destructive">*</span>
+  </label>
+  {{ restoration_form.restoration_type }}
+  {% for error in restoration_form.restoration_type.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+<div class="field-tooth_number space-y-2">
+  <label for="{{ restoration_form.tooth_number.id_for_label }}" class="label">Tooth Number</label>
+  {{ restoration_form.tooth_number }}
+  {% for error in restoration_form.tooth_number.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+<div class="field-material space-y-2">
+  <label for="{{ restoration_form.material.id_for_label }}" class="label">Material</label>
+  {{ restoration_form.material }}
+  {% for error in restoration_form.material.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+<div class="field-product space-y-2">
+  <label for="{{ restoration_form.product.id_for_label }}" class="label">Product</label>
+  {{ restoration_form.product }}
+  {% for error in restoration_form.product.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+<div class="field-shade space-y-2">
+  <label for="{{ restoration_form.shade.id_for_label }}" class="label">Shade</label>
+  {{ restoration_form.shade }}
+  {% for error in restoration_form.shade.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+{# --- Type-specific extra fields (shown/hidden by restoration_form.js) --- #}
+<div class="field-add_blocker">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.add_blocker }} Add Blocker</label>
+</div>
+
+<div class="field-stain_and_glaze">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.stain_and_glaze }} Stain &amp; Glaze</label>
+</div>
+
+<div class="field-design_service space-y-2">
+  <label for="{{ restoration_form.design_service.id_for_label }}" class="label">Design Service</label>
+  {{ restoration_form.design_service }}
+</div>
+
+<div class="field-include_tibase">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.include_tibase }} Include Ti-Base</label>
+</div>
+
+<div class="field-assembled_bonded">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.assembled_bonded }} Assembled &amp; Bonded</label>
+</div>
+
+<div class="field-implant_type space-y-2">
+  <label for="{{ restoration_form.implant_type.id_for_label }}" class="label">Implant Type</label>
+  {{ restoration_form.implant_type }}
+</div>
+
+<div class="field-implant_size space-y-2">
+  <label for="{{ restoration_form.implant_size.id_for_label }}" class="label">Implant Size</label>
+  {{ restoration_form.implant_size }}
+  {% for error in restoration_form.implant_size.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
+</div>
+
+<div class="field-tibase_type space-y-2">
+  <label for="{{ restoration_form.tibase_type.id_for_label }}" class="label">Ti-Base Type</label>
+  {{ restoration_form.tibase_type }}
+</div>
+
+<div class="field-number_of_units space-y-2">
+  <label for="{{ restoration_form.number_of_units.id_for_label }}" class="label">Number of Units</label>
+  {{ restoration_form.number_of_units }}
+</div>
+
+<div class="field-is_screw_retained">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.is_screw_retained }} Is Screw-Retained</label>
+</div>
+
+<div class="field-bar_details space-y-2">
+  <label for="{{ restoration_form.bar_details.id_for_label }}" class="label">Bar Details</label>
+  {{ restoration_form.bar_details }}
+</div>
+
+<div class="field-model_type space-y-2">
+  <label for="{{ restoration_form.model_type.id_for_label }}" class="label">Model Type</label>
+  {{ restoration_form.model_type }}
+</div>
+
+<div class="field-arches space-y-2">
+  <label for="{{ restoration_form.arches.id_for_label }}" class="label">Arches</label>
+  {{ restoration_form.arches }}
+</div>
+
+<div class="field-size space-y-2">
+  <label for="{{ restoration_form.size.id_for_label }}" class="label">Size</label>
+  {{ restoration_form.size }}
+</div>
+
+<div class="field-extra_separate_dies space-y-2">
+  <label for="{{ restoration_form.extra_separate_dies.id_for_label }}" class="label">Extra Separate Dies</label>
+  {{ restoration_form.extra_separate_dies }}
+</div>
+
+<div class="field-vertex_articulator">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.vertex_articulator }} Vertex Articulator</label>
+</div>
+
+<div class="field-model_unit_details space-y-2">
+  <label for="{{ restoration_form.model_unit_details.id_for_label }}" class="label">Model Unit Details</label>
+  {{ restoration_form.model_unit_details }}
+</div>
+
+<div class="field-gold_anodizing">
+  <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.gold_anodizing }} Gold Anodizing</label>
+</div>
+
+{# --- Case note (always shown) --- #}
+<div class="field-case_note space-y-2">
+  <label for="{{ restoration_form.case_note.id_for_label }}" class="label">Case Note</label>
+  {{ restoration_form.case_note }}
+</div>

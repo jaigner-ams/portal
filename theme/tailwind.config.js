@@ -4,6 +4,7 @@ module.exports = {
     "../accounts/templates/**/*.html",
     "../core/templates/**/*.html",
     "../portal/templates/**/*.html",
+    "../restorations/templates/**/*.html",
     "../templates/**/*.html",
   ],
   theme: {

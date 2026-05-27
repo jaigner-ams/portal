@@ -72,6 +72,7 @@
       </a>
       <nav class="flex items-center gap-2">
         {% block nav_items %}{% endblock %}
+        <a href="{% url 'restorations:case-new' %}" class="btn-ghost btn-sm text-sm {% if '/restorations' in request.path %}font-medium{% endif %}">Restorations</a>
         {% if user.is_admin %}
         <a href="{% url 'message_list' %}" class="btn-ghost btn-sm text-sm {% if request.path|slice:':9' == '/messages' %}font-medium{% endif %}">Messages</a>
         <a href="{% url 'accounts:user_list' %}" class="btn-ghost btn-sm text-sm {% if request.path|slice:':9' == '/accounts' %}font-medium{% endif %}">Users</a>

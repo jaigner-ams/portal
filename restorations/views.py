@@ -1,10 +1,60 @@
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import ImplantSize, ImplantType, Material, Product, RestorationType
+from .forms import CaseForm, RestorationForm
+from .models import (
+    Case,
+    ImplantSize,
+    ImplantType,
+    Material,
+    Product,
+    RestorationType,
+)
 
 
-@staff_member_required
+@login_required
+def restoration_add(request):
+    """Create a new case and add its first restoration."""
+    case_form = CaseForm(request.POST or None)
+    restoration_form = RestorationForm(request.POST or None)
+    if request.method == "POST":
+        if case_form.is_valid() and restoration_form.is_valid():
+            with transaction.atomic():
+                case = case_form.save()
+                restoration = restoration_form.save(commit=False)
+                restoration.case = case
+                restoration.save()
+            messages.success(request, "Case created and restoration added.")
+            return redirect("restorations:case-detail", pk=case.pk)
+    return render(request, "restorations/restoration_form.html", {
+        "case_form": case_form,
+        "restoration_form": restoration_form,
+    })
+
+
+@login_required
+def case_detail(request, pk):
+    """Show a case with its restorations and add more to it."""
+    case = get_object_or_404(Case, pk=pk)
+    restoration_form = RestorationForm(request.POST or None)
+    if request.method == "POST":
+        if restoration_form.is_valid():
+            restoration = restoration_form.save(commit=False)
+            restoration.case = case
+            restoration.save()
+            messages.success(request, "Restoration added.")
+            return redirect("restorations:case-detail", pk=case.pk)
+    return render(request, "restorations/case_detail.html", {
+        "case": case,
+        "restorations": case.restorations.all(),
+        "restoration_form": restoration_form,
+    })
+
+
+@login_required
 def restoration_type_options(request):
     restoration_type_id = request.GET.get("restoration_type")
     if restoration_type_id:
@@ -31,7 +81,7 @@ def restoration_type_options(request):
     })
 
 
-@staff_member_required
+@login_required
 def material_products(request):
     material_id = request.GET.get("material")
     if material_id:
@@ -46,7 +96,7 @@ def material_products(request):
     return JsonResponse({"products": [], "has_products": False})
 
 
-@staff_member_required
+@login_required
 def implant_sizes(request):
     implant_type_id = request.GET.get("implant_type")
     if implant_type_id:

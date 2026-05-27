@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Case #{{ case.pk }} — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">{{ case.patient_name }}</h1>
+      <p class="text-sm text-muted-foreground mt-1">Case #{{ case.pk }}</p>
+    </div>
+    <a href="{% url 'restorations:case-new' %}" class="btn-secondary btn-sm">Start new case</a>
+  </div>
+
+  {# --- Case summary --- #}
+  <div class="card">
+    <div class="card-content grid gap-4 p-6 sm:grid-cols-3">
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Shipping</p>
+        <p class="text-sm mt-1">{{ case.get_shipping_method_display }}</p>
+      </div>
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Mill Priority</p>
+        <p class="text-sm mt-1">{{ case.get_mill_priority_display|default:"—" }}</p>
+      </div>
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Created</p>
+        <p class="text-sm mt-1">{{ case.created_at|date:"M j, Y g:i A" }}</p>
+      </div>
+    </div>
+  </div>
+
+  {# --- Restorations on this case --- #}
+  <div class="space-y-3">
+    <h2 class="text-lg font-semibold tracking-tight">
+      Restorations
+      <span class="badge border-transparent bg-muted text-muted-foreground ml-1">{{ restorations|length }}</span>
+    </h2>
+    <div class="space-y-2">
+      {% for restoration in restorations %}
+      <div class="card">
+        <div class="flex items-center gap-3 p-4">
+          <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+            {{ forloop.counter }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium">{{ restoration }}</p>
+            <p class="text-xs text-muted-foreground mt-0.5">
+              {{ restoration.restoration_type }}{% if restoration.shade %} · Shade {{ restoration.shade }}{% endif %}{% if restoration.product %} · {{ restoration.product }}{% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="card">
+        <div class="p-6 text-center text-sm text-muted-foreground">No restorations on this case yet.</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="separator"></div>
+
+  {# --- Add another restoration --- #}
+  <div class="max-w-2xl">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Add Restoration</h2>
+        <p class="card-description">Fields adjust based on the restoration type.</p>
+      </div>
+      <div class="card-content">
+        <form method="post" class="space-y-5">
+          {% csrf_token %}
+          {% include "restorations/_restoration_fields.html" %}
+          <div class="pt-2">
+            <button type="submit" class="btn-primary">Add restoration</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'restorations/js/restoration_form.js' %}"></script>
+{% endblock %}
