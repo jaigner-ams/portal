@@ -1,0 +1,105 @@
+/* Tooth-chart picker modal + clickable hotspot overlay.
+   Plain CSS (not Tailwind) so the JS-generated hotspots aren't purged.
+   Relies on the design-token CSS variables defined in styles.css. */
+
+.tooth-chart-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.tooth-chart-modal.open { display: flex; }
+
+.tooth-chart-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.tooth-chart-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  max-width: 100%;
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.tooth-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.tooth-chart-header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: calc(var(--radius) - 4px);
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+}
+.tooth-chart-header button:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.tooth-chart-body {
+  padding: 1rem;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Wraps the chart image; sized to the image so % hotspots align to it. */
+.tooth-chart-stage {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+.tooth-chart-stage img {
+  display: block;
+  width: auto;
+  max-height: 72vh;
+  max-width: 100%;
+}
+
+.tooth-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 9%;
+  aspect-ratio: 1 / 1;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+.tooth-hotspot:hover,
+.tooth-hotspot:focus-visible {
+  outline: none;
+  background: hsl(var(--primary) / 0.25);
+  border-color: hsl(var(--primary));
+}
+.tooth-hotspot.selected {
+  background: hsl(var(--primary) / 0.35);
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.4);
+}

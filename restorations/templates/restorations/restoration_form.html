@@ -3,6 +3,10 @@
 
 {% block title %}New Restoration — AmericaSmiles Portal{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'restorations/css/tooth_chart.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="space-y-6">
 
@@ -81,4 +85,5 @@
 
 {% block extra_js %}
 <script src="{% static 'restorations/js/restoration_form.js' %}"></script>
+<script src="{% static 'restorations/js/tooth_chart.js' %}"></script>
 {% endblock %}

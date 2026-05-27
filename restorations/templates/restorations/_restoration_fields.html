@@ -1,3 +1,4 @@
+{% load static %}
 {% comment %}
 Shared restoration field rows. Expects `restoration_form` in context.
 Each field is wrapped in `.field-<name>` so restoration_form.js can toggle
@@ -21,7 +22,13 @@ visibility, mirroring the admin form's dynamic behavior.
 
 <div class="field-tooth_number space-y-2">
   <label for="{{ restoration_form.tooth_number.id_for_label }}" class="label">Tooth Number</label>
-  {{ restoration_form.tooth_number }}
+  <div class="flex items-center gap-2">
+    <div class="flex-1">{{ restoration_form.tooth_number }}</div>
+    <button type="button" id="open-tooth-chart" class="btn-secondary btn-sm shrink-0">
+      <svg class="mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      Pick on chart
+    </button>
+  </div>
   {% for error in restoration_form.tooth_number.errors %}<p class="text-xs text-destructive">{{ error }}</p>{% endfor %}
 </div>
 
@@ -132,4 +139,22 @@ visibility, mirroring the admin form's dynamic behavior.
 <div class="field-case_note space-y-2">
   <label for="{{ restoration_form.case_note.id_for_label }}" class="label">Case Note</label>
   {{ restoration_form.case_note }}
+</div>
+
+{# --- Tooth-number picker modal (Universal Numbering System chart) --- #}
+<div id="tooth-chart-modal" class="tooth-chart-modal" role="dialog" aria-modal="true" aria-label="Select a tooth" aria-hidden="true">
+  <div class="tooth-chart-backdrop" data-close></div>
+  <div class="tooth-chart-panel">
+    <div class="tooth-chart-header">
+      <span>Select a tooth &mdash; Universal Numbering System</span>
+      <button type="button" data-close aria-label="Close">
+        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="tooth-chart-body">
+      <div class="tooth-chart-stage" id="tooth-chart-stage">
+        <img src="{% static 'restorations/img/tooth_chart.svg' %}" alt="Universal Numbering System tooth chart">
+      </div>
+    </div>
+  </div>
 </div>
