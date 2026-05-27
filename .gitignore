@@ -12,8 +12,11 @@ venv/
 *.log
 local_settings.py
 db.sqlite3
-static/
-media/
+# Only ignore the collected STATIC_ROOT at the repo root, NOT app source
+# static dirs (core/static, restorations/static) which hold checked-in assets
+# like the compiled Tailwind build (servers have no node to build it).
+/static/
+/media/
 
 # Node
 theme/node_modules/
