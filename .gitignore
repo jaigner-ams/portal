@@ -31,3 +31,6 @@ Thumbs.db
 
 # Claude session data
 .claude/
+
+# Local deploy secrets (Cloudflare creds, etc.)
+.deploy.env
