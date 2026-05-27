@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Site Messages — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Site Messages</h1>
+      <p class="text-sm text-muted-foreground mt-1">Manage banners displayed at the top of every page.</p>
+    </div>
+    <a href="{% url 'message_create' %}" class="btn-primary">
+      <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      New message
+    </a>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="space-y-4">
+    {% for msg in managed_messages %}
+    <div class="card">
+      <div class="p-6 flex items-start gap-4">
+
+        {# Type indicator #}
+        <div class="mt-0.5 shrink-0">
+          {% if msg.message_type == 'warning' %}
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            </span>
+          {% elif msg.message_type == 'error' %}
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            </span>
+          {% elif msg.message_type == 'success' %}
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+            </span>
+          {% else %}
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </span>
+          {% endif %}
+        </div>
+
+        {# Message content #}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ msg.get_message_type_display }}</span>
+            {% if msg.is_active %}
+              <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
+            {% else %}
+              <span class="badge border-transparent bg-muted text-muted-foreground">Inactive</span>
+            {% endif %}
+          </div>
+          <p class="text-sm whitespace-pre-line">{{ msg.message }}</p>
+          <p class="text-xs text-muted-foreground mt-2">Updated {{ msg.updated_at|date:"M j, Y g:i A" }}</p>
+        </div>
+
+        {# Actions #}
+        <div class="flex items-center gap-2 shrink-0">
+          <form method="post" action="{% url 'message_toggle' msg.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-ghost btn-sm text-sm">
+              {% if msg.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+          </form>
+          <a href="{% url 'message_edit' msg.pk %}" class="btn-ghost btn-sm">Edit</a>
+          <form method="post" action="{% url 'message_delete' msg.pk %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="btn-ghost btn-sm text-destructive hover:text-destructive"
+                    onclick="return confirm('Delete this message?')">
+              Delete
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+    {% empty %}
+    <div class="card">
+      <div class="p-10 text-center text-sm text-muted-foreground">
+        No messages yet. Create one to display a banner across the portal.
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

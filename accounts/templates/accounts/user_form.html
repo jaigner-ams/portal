@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form_title }} — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center gap-3">
+    <a href="{% url 'accounts:user_list' %}" class="btn-ghost btn-sm">
+      <svg class="mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Users
+    </a>
+    <span class="text-muted-foreground">/</span>
+    <span class="text-sm font-medium">{{ form_title }}</span>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="max-w-2xl">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="alert-destructive text-sm">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {# Name row #}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="{{ form.first_name.id_for_label }}" class="label">
+            First name <span class="text-destructive">*</span>
+          </label>
+          <input type="text" name="{{ form.first_name.html_name }}"
+                 id="{{ form.first_name.id_for_label }}"
+                 value="{{ form.first_name.value|default:'' }}"
+                 class="input {% if form.first_name.errors %}border-destructive{% endif %}"
+                 autocomplete="given-name">
+          {% if form.first_name.errors %}<p class="text-xs text-destructive mt-1">{{ form.first_name.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label for="{{ form.last_name.id_for_label }}" class="label">
+            Last name <span class="text-destructive">*</span>
+          </label>
+          <input type="text" name="{{ form.last_name.html_name }}"
+                 id="{{ form.last_name.id_for_label }}"
+                 value="{{ form.last_name.value|default:'' }}"
+                 class="input {% if form.last_name.errors %}border-destructive{% endif %}"
+                 autocomplete="family-name">
+          {% if form.last_name.errors %}<p class="text-xs text-destructive mt-1">{{ form.last_name.errors|join:", " }}</p>{% endif %}
+        </div>
+      </div>
+
+      {# Username #}
+      <div class="space-y-2">
+        <label for="{{ form.username.id_for_label }}" class="label">
+          Username <span class="text-destructive">*</span>
+        </label>
+        <input type="text" name="{{ form.username.html_name }}"
+               id="{{ form.username.id_for_label }}"
+               value="{{ form.username.value|default:'' }}"
+               class="input {% if form.username.errors %}border-destructive{% endif %}"
+               autocomplete="username">
+        {% if form.username.errors %}<p class="text-xs text-destructive mt-1">{{ form.username.errors|join:", " }}</p>{% endif %}
+      </div>
+
+      {# Email + Phone row #}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="{{ form.email.id_for_label }}" class="label">
+            Email {% if form.instance.pk is None %}<span class="text-destructive">*</span>{% endif %}
+          </label>
+          <input type="email" name="{{ form.email.html_name }}"
+                 id="{{ form.email.id_for_label }}"
+                 value="{{ form.email.value|default:'' }}"
+                 class="input {% if form.email.errors %}border-destructive{% endif %}"
+                 autocomplete="email">
+          {% if form.email.errors %}<p class="text-xs text-destructive mt-1">{{ form.email.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label for="{{ form.phone.id_for_label }}" class="label">Phone</label>
+          <input type="tel" name="{{ form.phone.html_name }}"
+                 id="{{ form.phone.id_for_label }}"
+                 value="{{ form.phone.value|default:'' }}"
+                 class="input {% if form.phone.errors %}border-destructive{% endif %}"
+                 autocomplete="tel">
+          {% if form.phone.errors %}<p class="text-xs text-destructive mt-1">{{ form.phone.errors|join:", " }}</p>{% endif %}
+        </div>
+      </div>
+
+      {# Role (+ active toggle on edit) #}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="{{ form.role.id_for_label }}" class="label">
+            Role <span class="text-destructive">*</span>
+          </label>
+          <select name="{{ form.role.html_name }}"
+                  id="{{ form.role.id_for_label }}"
+                  class="input {% if form.role.errors %}border-destructive{% endif %}">
+            {% for val, label in form.fields.role.choices %}
+            <option value="{{ val }}" {% if form.role.value == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if form.role.errors %}<p class="text-xs text-destructive mt-1">{{ form.role.errors|join:", " }}</p>{% endif %}
+        </div>
+        {% if form.instance.pk %}
+        <div class="space-y-2">
+          <label class="label">Account status</label>
+          <label class="flex h-10 cursor-pointer items-center gap-2 text-sm">
+            <input type="checkbox" name="{{ form.is_active.html_name }}"
+                   id="{{ form.is_active.id_for_label }}"
+                   class="h-4 w-4 rounded border-input"
+                   {% if form.is_active.value %}checked{% endif %}>
+            Active
+          </label>
+        </div>
+        {% endif %}
+      </div>
+
+      {# Password fields #}
+      {% if form.password1 %}
+      {# Create form — uses UserCreationForm password1/password2 #}
+      <div class="separator"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="{{ form.password1.id_for_label }}" class="label">
+            Password <span class="text-destructive">*</span>
+          </label>
+          <input type="password" name="{{ form.password1.html_name }}"
+                 id="{{ form.password1.id_for_label }}"
+                 class="input {% if form.password1.errors %}border-destructive{% endif %}"
+                 autocomplete="new-password">
+          {% if form.password1.errors %}<p class="text-xs text-destructive mt-1">{{ form.password1.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div class="space-y-2">
+          <label for="{{ form.password2.id_for_label }}" class="label">
+            Confirm password <span class="text-destructive">*</span>
+          </label>
+          <input type="password" name="{{ form.password2.html_name }}"
+                 id="{{ form.password2.id_for_label }}"
+                 class="input {% if form.password2.errors %}border-destructive{% endif %}"
+                 autocomplete="new-password">
+          {% if form.password2.errors %}<p class="text-xs text-destructive mt-1">{{ form.password2.errors|join:", " }}</p>{% endif %}
+        </div>
+      </div>
+      {% elif form.new_password is not None %}
+      {# Edit form — optional password change #}
+      <div class="separator"></div>
+      <div>
+        <p class="text-sm font-medium mb-3">Change password <span class="text-muted-foreground font-normal">(optional)</span></p>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="{{ form.new_password.id_for_label }}" class="label">New password</label>
+            <input type="password" name="{{ form.new_password.html_name }}"
+                   id="{{ form.new_password.id_for_label }}"
+                   class="input {% if form.new_password.errors %}border-destructive{% endif %}"
+                   autocomplete="new-password">
+            {% if form.new_password.errors %}<p class="text-xs text-destructive mt-1">{{ form.new_password.errors|join:", " }}</p>{% endif %}
+          </div>
+          <div class="space-y-2">
+            <label for="{{ form.confirm_password.id_for_label }}" class="label">Confirm new password</label>
+            <input type="password" name="{{ form.confirm_password.html_name }}"
+                   id="{{ form.confirm_password.id_for_label }}"
+                   class="input {% if form.confirm_password.errors %}border-destructive{% endif %}"
+                   autocomplete="new-password">
+            {% if form.confirm_password.errors %}<p class="text-xs text-destructive mt-1">{{ form.confirm_password.errors|join:", " }}</p>{% endif %}
+          </div>
+        </div>
+        {% if edited_user %}
+        <p class="text-xs text-muted-foreground mt-3">
+          Member since {{ edited_user.date_joined|date:"F j, Y" }}
+          {% if edited_user.last_login %} · Last login {{ edited_user.last_login|date:"F j, Y" }}{% endif %}
+        </p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Actions #}
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="btn-primary">{{ submit_label }}</button>
+        <a href="{% url 'accounts:user_list' %}" class="btn-ghost">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

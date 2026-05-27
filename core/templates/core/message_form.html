@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form_title }} — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center gap-3">
+    <a href="{% url 'message_list' %}" class="btn-ghost btn-sm">
+      <svg class="mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Messages
+    </a>
+    <span class="text-muted-foreground">/</span>
+    <span class="text-sm font-medium">{{ form_title }}</span>
+  </div>
+
+  <div class="separator"></div>
+
+  <div class="max-w-2xl">
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <div class="space-y-2">
+        <label for="id_message_type" class="label">Type</label>
+        <select name="message_type" id="id_message_type" class="input max-w-xs">
+          {% for val, label in message_types %}
+          <option value="{{ val }}" {% if site_message.message_type == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="space-y-2">
+        <label for="id_message" class="label">
+          Message <span class="text-destructive">*</span>
+        </label>
+        <textarea name="message" id="id_message" rows="4"
+                  class="input h-auto resize-y"
+                  placeholder="Enter the message to display…">{{ site_message.message|default:'' }}</textarea>
+        <p class="text-xs text-muted-foreground">Supports line breaks. Displayed as a banner strip at the top of every page.</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="label">Status</label>
+        <label class="flex cursor-pointer items-center gap-2 text-sm">
+          <input type="checkbox" name="is_active" id="id_is_active"
+                 class="h-4 w-4 rounded border-input"
+                 {% if site_message.is_active or not site_message %}checked{% endif %}>
+          Active — display this message on the site
+        </label>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="btn-primary">{{ submit_label }}</button>
+        <a href="{% url 'message_list' %}" class="btn-ghost">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

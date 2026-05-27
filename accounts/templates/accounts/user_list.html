@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Users — AmericaSmiles Portal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Users</h1>
+      <p class="text-sm text-muted-foreground mt-1">Manage lab and staff accounts.</p>
+    </div>
+    <a href="{% url 'accounts:user_create' %}" class="btn-primary">
+      <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Add user
+    </a>
+  </div>
+
+  <div class="separator"></div>
+
+  {# Role filter tabs #}
+  <div class="flex gap-1 rounded-lg bg-muted p-1 w-fit text-sm">
+    <a href="{% url 'accounts:user_list' %}"
+       class="rounded-md px-3 py-1.5 font-medium transition-colors {% if not role_filter %}bg-background shadow-sm text-foreground{% else %}text-muted-foreground hover:text-foreground{% endif %}">
+      All
+    </a>
+    <a href="?role=lab"
+       class="rounded-md px-3 py-1.5 font-medium transition-colors {% if role_filter == 'lab' %}bg-background shadow-sm text-foreground{% else %}text-muted-foreground hover:text-foreground{% endif %}">
+      Labs
+    </a>
+    <a href="?role=staff"
+       class="rounded-md px-3 py-1.5 font-medium transition-colors {% if role_filter == 'staff' %}bg-background shadow-sm text-foreground{% else %}text-muted-foreground hover:text-foreground{% endif %}">
+      Staff
+    </a>
+    <a href="?role=admin"
+       class="rounded-md px-3 py-1.5 font-medium transition-colors {% if role_filter == 'admin' %}bg-background shadow-sm text-foreground{% else %}text-muted-foreground hover:text-foreground{% endif %}">
+      Admins
+    </a>
+  </div>
+
+  <div class="card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/50">
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Username</th>
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Role</th>
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-left font-medium text-muted-foreground">Last login</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for u in users %}
+        <tr class="hover:bg-muted/30 transition-colors">
+          <td class="px-4 py-3 font-medium">
+            <a href="{% url 'accounts:user_edit' u.pk %}" class="hover:underline">
+              {{ u.get_full_name|default:"—" }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-muted-foreground font-mono text-xs">{{ u.username }}</td>
+          <td class="px-4 py-3 text-muted-foreground">{{ u.email|default:"—" }}</td>
+          <td class="px-4 py-3">
+            {% if u.role == 'admin' %}
+              <span class="badge-default">Admin</span>
+            {% elif u.role == 'staff' %}
+              <span class="badge-secondary">Staff</span>
+            {% else %}
+              <span class="badge-secondary">Lab</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if u.is_active %}
+              <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
+            {% else %}
+              <span class="badge border-transparent bg-muted text-muted-foreground">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-muted-foreground text-xs">
+            {{ u.last_login|date:"M j, Y"|default:"Never" }}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center justify-end gap-2">
+              <a href="{% url 'accounts:user_edit' u.pk %}" class="btn-ghost btn-sm">Edit</a>
+              {% if u.is_active and u != request.user %}
+              <form method="post" action="{% url 'accounts:user_deactivate' u.pk %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn-ghost btn-sm text-destructive hover:text-destructive"
+                        onclick="return confirm('Deactivate {{ u.get_full_name|default:u.username }}?')">
+                  Deactivate
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">
+            No users found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
