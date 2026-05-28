@@ -218,6 +218,12 @@ class Case(models.Model):
         on_delete=models.SET_NULL,
         related_name="cases_created",
     )
+    # Cases start as drafts (submitted_at IS NULL) while the lab is adding
+    # restorations. They are visible to admins/staff in /orders/ only once
+    # the lab clicks "Submit case", which stamps submitted_at = now().
+    # Legacy rows (pre-field) are also NULL but will be backfilled in the
+    # migration so they remain visible.
+    submitted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -228,6 +234,10 @@ class Case(models.Model):
 
     def __str__(self):
         return f"{self.patient_name} (Case #{self.pk})"
+
+    @property
+    def is_submitted(self):
+        return self.submitted_at is not None
 
 
 class Restoration(models.Model):

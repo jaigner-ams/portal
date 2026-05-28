@@ -75,10 +75,13 @@ def orders(request):
         qs = Case.objects.filter(created_by=user)
         is_lab_view = True
     elif user.is_admin or user.is_staff_role:
-        # Show lab-created cases; legacy cases without a created_by still
-        # appear (they predate the field).
+        # Show lab-created cases that have been submitted by the lab; legacy
+        # cases without a created_by still appear (they predate the field).
+        # Drafts (submitted_at IS NULL) are hidden from admin/staff until the
+        # lab clicks Submit on the case.
         qs = Case.objects.filter(
-            Q(created_by__role="lab") | Q(created_by__isnull=True)
+            Q(created_by__role="lab") | Q(created_by__isnull=True),
+            submitted_at__isnull=False,
         )
         is_lab_view = False
     else:
@@ -114,13 +117,34 @@ def orders(request):
 
 @login_required
 @require_POST
-def cancel_restoration(request, pk):
-    """Lab cancels one of their restorations.
+def submit_case(request, pk):
+    """Lab submits a draft case so admins/staff can see it in Orders."""
+    case = get_object_or_404(Case, pk=pk)
+    if case.created_by_id != request.user.id:
+        return HttpResponseForbidden("Not your case.")
+    if case.submitted_at is None:
+        if not case.restorations.exists():
+            messages.error(
+                request,
+                "Add at least one restoration before submitting this case.",
+            )
+            return redirect("restorations:case-detail", pk=case.pk)
+        case.submitted_at = timezone.now()
+        case.save(update_fields=["submitted_at", "updated_at"])
+        messages.success(request, "Case submitted to AMS.")
+    return redirect("restorations:orders")
 
-    Marks the restoration cancelled and creates a chat ``Conversation``
-    (kind='cancellation') with a single system-style message describing what
-    was cancelled. The Conversation surfaces in the admin/staff chat widget
-    under the "Cancellations" section, where it can be claimed and resolved.
+
+@login_required
+@require_POST
+def cancel_restoration(request, pk):
+    """Lab cancels (or removes) one of their restorations.
+
+    - **Draft case** (never submitted): just delete the restoration row.
+      Nothing was sent to AMS, so no cancellation alert is created.
+    - **Submitted case**: mark the restoration cancelled and create a chat
+      ``Conversation`` (kind='cancellation') so admins/staff see and claim
+      the alert.
     """
     restoration = get_object_or_404(
         Restoration.objects.select_related("case", "restoration_type", "material"),
@@ -132,6 +156,12 @@ def cancel_restoration(request, pk):
     if restoration.is_cancelled:
         messages.info(request, "That restoration was already cancelled.")
         return redirect("restorations:orders")
+
+    # Draft branch: silently remove. AMS never saw this restoration.
+    if case.submitted_at is None:
+        restoration.delete()
+        messages.success(request, "Restoration removed from draft case.")
+        return redirect("restorations:case-detail", pk=case.pk)
 
     reason = (request.POST.get("reason") or "").strip()
     # Compose the system message admins/staff will see.
