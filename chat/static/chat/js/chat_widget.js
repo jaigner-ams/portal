@@ -153,7 +153,8 @@
         // Archived toggle is available to everyone (label flips based on mode).
         var arch = document.createElement('button');
         arch.type = 'button';
-        arch.textContent = state.showArchived ? 'Back to active chats' : 'Show archived';
+        arch.textContent = state.showArchived ? 'Active' : 'Archived';
+        arch.title = state.showArchived ? 'Back to active chats' : 'Show archived chats';
         arch.addEventListener('click', function () {
             state.showArchived = !state.showArchived;
             loadState();
@@ -449,6 +450,9 @@
     }
 
     function startSupportChat() {
+        // A newly started chat won't be in the archived list, so make sure
+        // we're in active view before refreshing.
+        state.showArchived = false;
         fetchJSON('/chat/api/conversations/start_support/', {method: 'POST', body: {}})
             .then(function (data) {
                 return loadState().then(function () {
@@ -458,6 +462,10 @@
     }
 
     function pickUser(userId) {
+        // start_dm reopens a closed/archived DM transparently, but the
+        // archived-by set is per-user; force the active view so the user
+        // can see the DM they just opened.
+        state.showArchived = false;
         fetchJSON('/chat/api/conversations/start_dm/', {
             method: 'POST', body: {user_id: userId},
         }).then(function (data) {
@@ -495,7 +503,11 @@
     }
     function unarchiveChat(id) {
         fetchJSON('/chat/api/conversations/' + id + '/unarchive/', {method: 'POST', body: {}})
-            .then(function () { return loadState(); });
+            .then(function () {
+                // The conv is now in the active list — switch the user there.
+                state.showArchived = false;
+                return loadState();
+            });
     }
     function markRead(id) {
         return fetchJSON('/chat/api/conversations/' + id + '/read/', {method: 'POST', body: {}})

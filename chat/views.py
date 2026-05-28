@@ -363,8 +363,11 @@ def start_dm(request):
         if existing.is_closed:
             existing.is_closed = False
             existing.save(update_fields=["is_closed", "updated_at"])
+        # Same for archived: explicitly picking this peer in "New DM" means
+        # the user wants the thread back in their active list.
+        existing.archived_by.remove(request.user)
         return JsonResponse(
-            {"conversation": _serialize_conv(existing, request.user)},
+            {"conversation": _serialize_conv(existing, request.user, is_archived=False)},
         )
     conv = Conversation.objects.create(kind=Conversation.KIND_DM)
     conv.participants.add(request.user, peer)

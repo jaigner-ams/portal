@@ -103,19 +103,41 @@
 }
 
 /* ── List view ────────────────────────────────────────────────────────── */
-.chat-actions { padding: 0.5rem 0.75rem; border-bottom: 1px solid hsl(var(--border)); }
-.chat-actions button {
-  width: 100%;
+.chat-actions {
   padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  display: flex;
+  gap: 0.4rem;
+  align-items: stretch;
+}
+.chat-actions button {
+  padding: 0.45rem 0.75rem;
   border-radius: calc(var(--radius) - 2px);
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 }
-.chat-actions button + button { margin-top: 0.4rem; background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.chat-actions button:first-child { flex: 1; }
+/* The "Archived" / "Active" toggle: less prominent than the primary action. */
+.chat-actions button + button {
+  flex: 0 0 auto;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+.chat-actions button + button:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
 .chat-actions button:hover { opacity: 0.92; }
+/* When only the toggle is visible (no primary action, e.g. a lab with an
+   already-open support chat), let it sit at the right rather than stretch. */
+.chat-actions button:only-child { margin-left: auto; }
 
 .chat-list { flex: 1; overflow-y: auto; }
 .chat-list-section {
