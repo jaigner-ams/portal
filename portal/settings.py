@@ -104,6 +104,27 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Redis cache + sessions (shared with the fusion stack on the same host).
+# When REDIS_URL is unset (local dev / no Redis) Django's defaults are used,
+# so the app keeps working with LocMemCache + DB sessions.
+# Use a DIFFERENT Redis DB number than fusion (fusion uses /0) and prefix all
+# keys with 'portal' so a misconfiguration can't collide with fusion data.
+REDIS_URL = config('REDIS_URL', default='')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'portal',
+        },
+    }
+    # cached_db reads sessions from cache (fast) with DB as fallback/durability;
+    # existing DB sessions remain valid — no one is logged out by enabling this.
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
