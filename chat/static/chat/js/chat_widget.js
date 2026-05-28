@@ -29,6 +29,7 @@
         activeConv: null,      // the active conversation object (from state)
         lastSeenMsgId: 0,
         pickerQuery: '',
+        showArchived: false,   // list-view toggle: see active vs archived
     };
     var pollTimer = null;
     var pickerTimer = null;
@@ -149,6 +150,15 @@
             });
             $actions.appendChild(dm);
         }
+        // Archived toggle is available to everyone (label flips based on mode).
+        var arch = document.createElement('button');
+        arch.type = 'button';
+        arch.textContent = state.showArchived ? 'Back to active chats' : 'Show archived';
+        arch.addEventListener('click', function () {
+            state.showArchived = !state.showArchived;
+            loadState();
+        });
+        $actions.appendChild(arch);
     }
 
     function renderList() {
@@ -273,6 +283,11 @@
         if (!c.is_closed && (state.isRep || (c.kind === 'support' && state.isLab))) {
             $convMeta.appendChild(btn('Close', 'danger', function () { closeChat(c.id); }));
         }
+        if (c.is_archived) {
+            $convMeta.appendChild(btn('Unarchive', null, function () { unarchiveChat(c.id); }));
+        } else {
+            $convMeta.appendChild(btn('Archive', null, function () { archiveChat(c.id); }));
+        }
     }
 
     // We don't ship the current user id; deduce it indirectly via 'is_mine' on
@@ -363,7 +378,8 @@
 
     // --- API calls -----------------------------------------------------------
     function loadState() {
-        return fetchJSON('/chat/api/state/').then(function (data) {
+        var url = '/chat/api/state/' + (state.showArchived ? '?show_archived=1' : '');
+        return fetchJSON(url).then(function (data) {
             state.isRep = !!data.is_rep;
             state.isLab = !!data.is_lab;
             state.conversations = data.conversations || [];
@@ -464,6 +480,21 @@
     function closeChat(id) {
         if (!confirm('Close this conversation?')) return;
         fetchJSON('/chat/api/conversations/' + id + '/close/', {method: 'POST', body: {}})
+            .then(function () { return loadState(); });
+    }
+    function archiveChat(id) {
+        fetchJSON('/chat/api/conversations/' + id + '/archive/', {method: 'POST', body: {}})
+            .then(function () {
+                // Hide from the active list; bounce the user back so they can
+                // see the change.
+                state.activeConvId = null;
+                state.activeConv = null;
+                showView('list');
+                return loadState();
+            });
+    }
+    function unarchiveChat(id) {
+        fetchJSON('/chat/api/conversations/' + id + '/unarchive/', {method: 'POST', body: {}})
             .then(function () { return loadState(); });
     }
     function markRead(id) {

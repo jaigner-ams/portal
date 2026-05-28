@@ -43,6 +43,14 @@ class Conversation(models.Model):
         related_name="dm_conversations",
     )
 
+    # Per-user archive: users in here have hidden this conversation from their
+    # own list. Cleared on each new message so important threads bubble back up.
+    archived_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="archived_conversations",
+    )
+
     is_closed = models.BooleanField(default=False)
     last_message_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

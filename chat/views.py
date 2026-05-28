@@ -63,7 +63,15 @@ def _unread_count(conv, user):
     return qs.count()
 
 
-def _serialize_conv(conv, user):
+def _serialize_conv(conv, user, is_archived=None):
+    """Serialize a conversation for the current user.
+
+    ``is_archived`` may be passed in by callers that already know whether the
+    user has archived this conversation (avoids an extra query per conv when
+    looping over a large list).
+    """
+    if is_archived is None:
+        is_archived = conv.archived_by.filter(pk=user.pk).exists()
     peer = None
     peer_name = ""
     if conv.kind == Conversation.KIND_SUPPORT:
@@ -97,6 +105,7 @@ def _serialize_conv(conv, user):
         ),
         "unread_count": _unread_count(conv, user),
         "can_reply": conv.can_reply(user),
+        "is_archived": is_archived,
     }
 
 
@@ -117,20 +126,40 @@ def _serialize_message(msg, user):
 @login_required
 @require_GET
 def state(request):
-    """The poll endpoint. Returns visible conversations + unread totals."""
-    convs = (
+    """The poll endpoint. Returns visible conversations + unread totals.
+
+    By default archived conversations are hidden; ``?show_archived=1`` flips
+    that and returns only the archived ones so the user can unarchive them.
+    """
+    show_archived = request.GET.get("show_archived") in ("1", "true")
+    base = (
         _visible_conversations(request.user)
         .select_related("lab_user", "claimed_by")
         .prefetch_related("participants")
-        .order_by("is_closed", "-last_message_at", "-created_at")
+    )
+    # One query to find which of these the user has archived; avoids a
+    # per-conv .filter() inside the serialize loop.
+    archived_ids = set(
+        request.user.archived_conversations.values_list("pk", flat=True)
+    )
+    if show_archived:
+        base = base.filter(pk__in=archived_ids)
+    else:
+        base = base.exclude(pk__in=archived_ids)
+    convs = list(
+        base.order_by("is_closed", "-last_message_at", "-created_at")
         [:MAX_CONVERSATIONS]
     )
-    serialized = [_serialize_conv(c, request.user) for c in convs]
+    serialized = [
+        _serialize_conv(c, request.user, is_archived=(c.pk in archived_ids))
+        for c in convs
+    ]
     return JsonResponse({
         "conversations": serialized,
         "total_unread": sum(c["unread_count"] for c in serialized),
         "is_rep": _is_rep(request.user),
         "is_lab": request.user.is_lab,
+        "show_archived": show_archived,
     })
 
 
@@ -177,6 +206,9 @@ def send(request, pk):
     )
     conv.last_message_at = msg.created_at
     conv.save(update_fields=["last_message_at", "updated_at"])
+    # New activity un-archives the conversation for everyone who had it
+    # archived (Gmail-style — important threads bubble back up).
+    conv.archived_by.clear()
     # Sender's own messages count as "read" up to now.
     ConversationRead.objects.update_or_create(
         user=request.user, conversation=conv,
@@ -244,6 +276,31 @@ def mark_read(request, pk):
         user=request.user, conversation=conv,
     )
     return JsonResponse({"ok": True})
+
+
+@login_required
+@require_POST
+def archive(request, pk):
+    """Hide this conversation from the requester's own list."""
+    conv = get_object_or_404(Conversation, pk=pk)
+    if not conv.visible_to(request.user):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+    conv.archived_by.add(request.user)
+    return JsonResponse(
+        {"conversation": _serialize_conv(conv, request.user, is_archived=True)}
+    )
+
+
+@login_required
+@require_POST
+def unarchive(request, pk):
+    conv = get_object_or_404(Conversation, pk=pk)
+    if not conv.visible_to(request.user):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+    conv.archived_by.remove(request.user)
+    return JsonResponse(
+        {"conversation": _serialize_conv(conv, request.user, is_archived=False)}
+    )
 
 
 @login_required

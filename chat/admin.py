@@ -15,7 +15,7 @@ class ConversationAdmin(admin.ModelAdmin):
         "claimed_by__username", "participants__username",
     ]
     readonly_fields = ["created_at", "updated_at", "last_message_at"]
-    filter_horizontal = ["participants"]
+    filter_horizontal = ["participants", "archived_by"]
 
 
 @admin.register(Message)
