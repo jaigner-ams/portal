@@ -181,15 +181,15 @@
             var nameSpan = document.createElement('span');
             nameSpan.textContent = c.peer_name || '(no name)';
             name.appendChild(nameSpan);
-            if (c.kind === 'support' && state.isRep) {
+            if ((c.kind === 'support' || c.kind === 'cancellation') && state.isRep) {
                 var tag = document.createElement('span');
                 tag.className = 'chat-li-tag';
                 if (c.is_closed) {
                     tag.classList.add('closed');
-                    tag.textContent = 'Closed';
+                    tag.textContent = c.kind === 'cancellation' ? 'Resolved' : 'Closed';
                 } else if (!c.claimed_by_id) {
                     tag.classList.add('unclaimed');
-                    tag.textContent = 'Unclaimed';
+                    tag.textContent = c.kind === 'cancellation' ? 'Action needed' : 'Unclaimed';
                 } else {
                     tag.textContent = 'Claimed: ' + (c.claimed_by_name || '');
                 }
@@ -222,15 +222,26 @@
         }
 
         if (state.isRep) {
+            var cancels = state.conversations.filter(function (c) { return c.kind === 'cancellation'; });
             var support = state.conversations.filter(function (c) { return c.kind === 'support'; });
             var dms = state.conversations.filter(function (c) { return c.kind === 'dm'; });
-            // Unclaimed support first, then claimed, then closed.
-            support.sort(function (a, b) {
+
+            function sortAlerts(a, b) {
                 if (a.is_closed !== b.is_closed) return a.is_closed ? 1 : -1;
                 var ua = a.claimed_by_id ? 1 : 0, ub = b.claimed_by_id ? 1 : 0;
                 if (ua !== ub) return ua - ub;
                 return 0;
-            });
+            }
+            cancels.sort(sortAlerts);
+            support.sort(sortAlerts);
+
+            if (cancels.length) {
+                var h0 = document.createElement('div');
+                h0.className = 'chat-list-section';
+                h0.textContent = 'Cancellations';
+                $list.appendChild(h0);
+                cancels.forEach(function (c) { $list.appendChild(makeItem(c)); });
+            }
             if (support.length) {
                 var h1 = document.createElement('div');
                 h1.className = 'chat-list-section';
@@ -254,7 +265,11 @@
         $convMeta.innerHTML = '';
         if (!c) return;
         var label = document.createElement('span');
-        if (c.kind === 'support' && state.isRep) {
+        if (c.kind === 'cancellation') {
+            label.textContent = c.lab_user_name
+                ? ('Cancellation · ' + c.lab_user_name)
+                : 'Cancellation alert';
+        } else if (c.kind === 'support' && state.isRep) {
             label.textContent = c.lab_user_name ? ('Lab: ' + c.lab_user_name) : 'Support chat';
         } else if (c.kind === 'support') {
             label.textContent = c.claimed_by_name
@@ -282,7 +297,8 @@
             }
         }
         if (!c.is_closed && (state.isRep || (c.kind === 'support' && state.isLab))) {
-            $convMeta.appendChild(btn('Close', 'danger', function () { closeChat(c.id); }));
+            var closeLabel = c.kind === 'cancellation' ? 'Resolve' : 'Close';
+            $convMeta.appendChild(btn(closeLabel, 'danger', function () { closeChat(c.id, closeLabel); }));
         }
         if (c.is_archived) {
             $convMeta.appendChild(btn('Unarchive', null, function () { unarchiveChat(c.id); }));
@@ -346,6 +362,12 @@
             $readonly.hidden = false;
             if (!c) {
                 $readonly.textContent = '';
+            } else if (c.kind === 'cancellation') {
+                $readonly.textContent = c.is_closed
+                    ? 'This cancellation has been resolved.'
+                    : (c.claimed_by_id
+                        ? 'Cancellation alert — claimed. Mark Resolved when handled.'
+                        : 'Cancellation alert — Claim it to take ownership.');
             } else if (c.is_closed) {
                 $readonly.textContent = 'This conversation is closed.';
             } else if (c.kind === 'support' && state.isRep && !c.claimed_by_id) {
@@ -485,8 +507,11 @@
         fetchJSON('/chat/api/conversations/' + id + '/unclaim/', {method: 'POST', body: {}})
             .then(function () { return loadState(); });
     }
-    function closeChat(id) {
-        if (!confirm('Close this conversation?')) return;
+    function closeChat(id, label) {
+        var msg = (label === 'Resolve')
+            ? 'Mark this cancellation as resolved?'
+            : 'Close this conversation?';
+        if (!confirm(msg)) return;
         fetchJSON('/chat/api/conversations/' + id + '/close/', {method: 'POST', body: {}})
             .then(function () { return loadState(); });
     }

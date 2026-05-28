@@ -13,12 +13,14 @@ class Conversation(models.Model):
 
     KIND_SUPPORT = "support"
     KIND_DM = "dm"
+    KIND_CANCELLATION = "cancellation"
     KIND_CHOICES = [
         (KIND_SUPPORT, "Support"),
         (KIND_DM, "Direct message"),
+        (KIND_CANCELLATION, "Cancellation"),
     ]
 
-    kind = models.CharField(max_length=10, choices=KIND_CHOICES)
+    kind = models.CharField(max_length=15, choices=KIND_CHOICES)
 
     # Support-only fields.
     lab_user = models.ForeignKey(
@@ -70,18 +72,23 @@ class Conversation(models.Model):
         if not user.is_authenticated:
             return False
         if user.is_lab:
+            # Labs only see their own support threads in chat. Cancellation
+            # alerts are surfaced on their /restorations/orders/ page instead.
             return (
                 self.kind == self.KIND_SUPPORT
                 and self.lab_user_id == user.id
             )
         if user.is_admin or user.is_staff_role:
-            if self.kind == self.KIND_SUPPORT:
+            if self.kind == self.KIND_SUPPORT or self.kind == self.KIND_CANCELLATION:
                 return True
             return self.participants.filter(pk=user.pk).exists()
         return False
 
     def can_reply(self, user):
         if self.is_closed or not self.visible_to(user):
+            return False
+        if self.kind == self.KIND_CANCELLATION:
+            # Cancellations are one-way alerts; no chatting back and forth.
             return False
         if self.kind == self.KIND_SUPPORT:
             if user.is_lab:

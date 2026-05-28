@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -207,6 +208,16 @@ class Case(models.Model):
         on_delete=models.SET_NULL,
         related_name="cases",
     )
+    # The user who created this case (typically a lab user). Lets the lab's
+    # "Your orders" page query their own cases. Nullable for existing rows
+    # created before this field was added.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cases_created",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -329,6 +340,21 @@ class Restoration(models.Model):
 
     # Case note
     case_note = models.TextField(blank=True)
+
+    # --- Cancellation state ---
+    is_cancelled = models.BooleanField(default=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)
+    # The chat Conversation (kind='cancellation') created when the lab cancels.
+    # Lets the lab's orders page show the alert's claim/resolve status without
+    # an extra lookup, and ensures one Conversation per cancelled restoration.
+    cancellation_conversation = models.OneToOneField(
+        "chat.Conversation",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cancelled_restoration",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

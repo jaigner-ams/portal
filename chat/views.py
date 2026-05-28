@@ -39,6 +39,7 @@ def _visible_conversations(user):
     if _is_rep(user):
         return Conversation.objects.filter(
             Q(kind=Conversation.KIND_SUPPORT)
+            | Q(kind=Conversation.KIND_CANCELLATION)
             | Q(kind=Conversation.KIND_DM, participants=user)
         ).distinct()
     return Conversation.objects.none()
@@ -74,7 +75,7 @@ def _serialize_conv(conv, user, is_archived=None):
         is_archived = conv.archived_by.filter(pk=user.pk).exists()
     peer = None
     peer_name = ""
-    if conv.kind == Conversation.KIND_SUPPORT:
+    if conv.kind in (Conversation.KIND_SUPPORT, Conversation.KIND_CANCELLATION):
         if user.is_lab:
             peer = conv.claimed_by
             peer_name = _display_name(peer) or "AMS Support"
