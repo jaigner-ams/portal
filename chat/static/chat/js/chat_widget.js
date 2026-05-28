@@ -287,9 +287,21 @@
     }
     state.activeMessages = [];
 
+    // Track which message ids are already rendered. Polling can race with
+    // a Send response: the poll fetch was issued BEFORE lastSeenMsgId got
+    // bumped by the send-response render, so the poll's reply contains the
+    // just-sent message and we'd render it twice. This Set blocks that.
+    var renderedIds = new Set();
+
     function renderMessages(msgs, appendOnly) {
-        if (!appendOnly) $messages.innerHTML = '';
+        if (!appendOnly) {
+            $messages.innerHTML = '';
+            renderedIds.clear();
+            state.activeMessages = [];
+        }
         msgs.forEach(function (m) {
+            if (renderedIds.has(m.id)) return;
+            renderedIds.add(m.id);
             var div = document.createElement('div');
             div.className = 'chat-msg ' + (m.is_mine ? 'mine' : 'theirs');
             if (!m.is_mine) {
