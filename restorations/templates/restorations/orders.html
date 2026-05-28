@@ -1,24 +1,41 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Your orders — AmericaSmiles Portal{% endblock %}
+{% block title %}{% if is_lab_view %}Your orders{% else %}Orders{% endif %} — AmericaSmiles Portal{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
   <div class="flex items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight">Your orders</h1>
+      <h1 class="text-2xl font-semibold tracking-tight">{% if is_lab_view %}Your orders{% else %}Orders{% endif %}</h1>
       <p class="text-sm text-muted-foreground mt-1">
-        Every restoration request you've sent to AMS, newest first. You can cancel
-        anything that hasn't been completed yet.
+        {% if is_lab_view %}
+          Every restoration request you've sent to AMS, newest first. You can cancel
+          anything that hasn't been completed yet.
+        {% else %}
+          Incoming restoration orders from all labs, newest first.
+          Showing the {{ cases|length }} most recent
+          {% if q %}match{{ cases|length|pluralize }}{% else %}case{{ cases|length|pluralize }}{% endif %}.
+        {% endif %}
       </p>
     </div>
+    {% if is_lab_view %}
     <a href="{% url 'restorations:case-new' %}" class="btn-primary">
       <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
       New case
     </a>
+    {% endif %}
   </div>
+
+  {% if not is_lab_view %}
+  <form method="get" class="flex items-center gap-2 max-w-md">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search patient or lab…"
+           class="input" autocomplete="off">
+    <button type="submit" class="btn-secondary btn-sm">Search</button>
+    {% if q %}<a href="{% url 'restorations:orders' %}" class="btn-ghost btn-sm">Clear</a>{% endif %}
+  </form>
+  {% endif %}
 
   <div class="separator"></div>
 
@@ -36,6 +53,9 @@
               {{ case.get_shipping_method_display }}
               {% if case.mill_priority %} · {{ case.get_mill_priority_display }}{% endif %}
               · Created {{ case.created_at|date:"M j, Y" }}
+              {% if not is_lab_view %}
+                · Lab: <span class="font-medium text-foreground">{{ case.created_by.get_full_name|default:case.created_by.username|default:"—" }}</span>
+              {% endif %}
             </p>
           </div>
           <a href="{% url 'restorations:case-detail' case.pk %}" class="btn-ghost btn-sm">View case</a>
@@ -75,13 +95,13 @@
                 {% endif %}
               </div>
 
-              {% if not restoration.is_cancelled %}
+              {% if is_lab_view and not restoration.is_cancelled %}
               <button type="button" data-cancel-toggle="{{ restoration.pk }}"
                       class="btn-ghost btn-sm text-destructive shrink-0">Cancel…</button>
               {% endif %}
             </div>
 
-            {% if not restoration.is_cancelled %}
+            {% if is_lab_view and not restoration.is_cancelled %}
             <form id="cancel-form-{{ restoration.pk }}"
                   method="post" action="{% url 'restorations:cancel-restoration' restoration.pk %}"
                   class="mt-3 hidden space-y-2 rounded-md bg-muted/40 p-3 border border-border">
@@ -106,10 +126,16 @@
     {% empty %}
     <div class="card">
       <div class="p-10 text-center text-sm text-muted-foreground">
-        You haven't placed any orders yet.
-        <div class="mt-3">
-          <a href="{% url 'restorations:case-new' %}" class="btn-primary btn-sm">Start a new case</a>
-        </div>
+        {% if is_lab_view %}
+          You haven't placed any orders yet.
+          <div class="mt-3">
+            <a href="{% url 'restorations:case-new' %}" class="btn-primary btn-sm">Start a new case</a>
+          </div>
+        {% elif q %}
+          No orders match “{{ q }}”.
+        {% else %}
+          No orders from labs yet.
+        {% endif %}
       </div>
     </div>
     {% endfor %}

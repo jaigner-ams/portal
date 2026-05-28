@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -63,13 +64,38 @@ def case_detail(request, pk):
 
 @login_required
 def orders(request):
-    """Lab-only: every case (and its restorations) this user has created."""
-    if not request.user.is_lab:
-        return HttpResponseForbidden("Orders are viewable by lab users.")
+    """List of restoration orders.
+
+    - Lab users see only their own cases.
+    - Admin/staff users see every lab-created case (read-only) with a search
+      box that filters by patient name or lab user (name / username / email).
+    """
+    user = request.user
+    if user.is_lab:
+        qs = Case.objects.filter(created_by=user)
+        is_lab_view = True
+    elif user.is_admin or user.is_staff_role:
+        # Show lab-created cases; legacy cases without a created_by still
+        # appear (they predate the field).
+        qs = Case.objects.filter(
+            Q(created_by__role="lab") | Q(created_by__isnull=True)
+        )
+        is_lab_view = False
+    else:
+        return HttpResponseForbidden("Orders are not available for your role.")
+
+    q = (request.GET.get("q") or "").strip()
+    if q and not is_lab_view:
+        qs = qs.filter(
+            Q(patient_name__icontains=q)
+            | Q(created_by__first_name__icontains=q)
+            | Q(created_by__last_name__icontains=q)
+            | Q(created_by__username__icontains=q)
+            | Q(created_by__email__icontains=q)
+        )
+
     cases = (
-        Case.objects
-        .filter(created_by=request.user)
-        .select_related("batch")
+        qs.select_related("batch", "created_by")
         .prefetch_related(
             "restorations__restoration_type",
             "restorations__material",
@@ -77,8 +103,13 @@ def orders(request):
             "restorations__cancellation_conversation__claimed_by",
         )
         .order_by("-created_at")
+        [:200]
     )
-    return render(request, "restorations/orders.html", {"cases": cases})
+    return render(request, "restorations/orders.html", {
+        "cases": cases,
+        "is_lab_view": is_lab_view,
+        "q": q,
+    })
 
 
 @login_required

@@ -76,9 +76,7 @@
       <nav class="flex items-center gap-2">
         {% block nav_items %}{% endblock %}
         <a href="{% url 'restorations:case-new' %}" class="btn-ghost btn-sm text-sm {% if '/restorations' in request.path and '/orders' not in request.path %}font-medium{% endif %}">Restorations</a>
-        {% if user.is_lab %}
-        <a href="{% url 'restorations:orders' %}" class="btn-ghost btn-sm text-sm {% if '/orders' in request.path %}font-medium{% endif %}">My orders</a>
-        {% endif %}
+        <a href="{% url 'restorations:orders' %}" class="btn-ghost btn-sm text-sm {% if '/orders' in request.path %}font-medium{% endif %}">{% if user.is_lab %}My orders{% else %}Orders{% endif %}</a>
         {% if user.is_admin %}
         <a href="{% url 'message_list' %}" class="btn-ghost btn-sm text-sm {% if request.path|slice:':9' == '/messages' %}font-medium{% endif %}">Messages</a>
         <a href="{% url 'accounts:user_list' %}" class="btn-ghost btn-sm text-sm {% if request.path|slice:':9' == '/accounts' %}font-medium{% endif %}">Users</a>
