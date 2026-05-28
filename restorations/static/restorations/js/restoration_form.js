@@ -14,6 +14,45 @@
         'gold_anodizing'
     ];
 
+    // Active notes per selection key. Updated as the user picks values; rendered
+    // into the #restoration-notes panel. Empty string means "no note for that key."
+    var notes = {restoration_type: '', material: '', product: ''};
+    // Cached option lists so we can look up a note for the currently selected id
+    // without an extra round-trip.
+    var lastMaterials = [];
+    var lastProducts = [];
+
+    function lookupNote(arr, id) {
+        for (var i = 0; i < arr.length; i++) {
+            if (String(arr[i].id) === String(id)) {
+                return arr[i].display_note || '';
+            }
+        }
+        return '';
+    }
+
+    function renderNotes() {
+        var panel = document.getElementById('restoration-notes');
+        var list  = document.getElementById('restoration-notes-list');
+        if (!panel || !list) return;
+        var active = [];
+        ['restoration_type', 'material', 'product'].forEach(function (k) {
+            if (notes[k] && notes[k].trim()) active.push(notes[k]);
+        });
+        list.innerHTML = '';
+        if (active.length === 0) {
+            panel.classList.add('hidden');
+            return;
+        }
+        active.forEach(function (text, idx) {
+            var p = document.createElement('p');
+            if (idx > 0) p.className = 'mt-2';
+            p.textContent = text;
+            list.appendChild(p);
+        });
+        panel.classList.remove('hidden');
+    }
+
     function updateSelect(selectId, options, preserveValue) {
         var select = document.getElementById(selectId);
         if (!select) return;
@@ -84,12 +123,18 @@
     function onRestorationTypeChange(restorationTypeId) {
         clearSelect('id_material');
         clearSelect('id_product');
+        notes.restoration_type = '';
+        notes.material = '';
+        notes.product = '';
+        lastMaterials = [];
+        lastProducts = [];
 
         if (!restorationTypeId) {
             setToothNumberVisible(true);
             setShadeVisible(false);
             setProductVisible(false);
             setExtraFieldsVisibility([]);
+            renderNotes();
             return;
         }
 
@@ -103,6 +148,9 @@
                 setShadeVisible(data.requires_shade);
                 setProductVisible(false);
                 setExtraFieldsVisibility(data.extra_fields || []);
+                notes.restoration_type = data.display_note || '';
+                lastMaterials = data.materials || [];
+                renderNotes();
             });
     }
 
@@ -119,9 +167,13 @@
     // Material changed: update products and show/hide product row.
     function onMaterialChange(materialId, preserveProduct) {
         clearSelect('id_product');
+        notes.material = lookupNote(lastMaterials, materialId);
+        notes.product = '';
+        lastProducts = [];
 
         if (!materialId) {
             setProductVisible(false);
+            renderNotes();
             return;
         }
 
@@ -134,7 +186,18 @@
                 if (data.has_products) {
                     updateSelect('id_product', data.products, preserveProduct || null);
                 }
+                lastProducts = data.products || [];
+                if (preserveProduct) {
+                    notes.product = lookupNote(lastProducts, preserveProduct);
+                }
+                renderNotes();
             });
+    }
+
+    // Product changed: update product note.
+    function onProductChange(productId) {
+        notes.product = lookupNote(lastProducts, productId);
+        renderNotes();
     }
 
     // Implant type changed: cascade to implant sizes.
@@ -157,6 +220,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         var typeSelect = document.getElementById('id_restoration_type');
         var materialSelect = document.getElementById('id_material');
+        var productSelect = document.getElementById('id_product');
         var implantTypeSelect = document.getElementById('id_implant_type');
         if (!typeSelect) return;
 
@@ -167,6 +231,12 @@
         if (materialSelect) {
             materialSelect.addEventListener('change', function () {
                 onMaterialChange(this.value, null);
+            });
+        }
+
+        if (productSelect) {
+            productSelect.addEventListener('change', function () {
+                onProductChange(this.value);
             });
         }
 
@@ -199,11 +269,16 @@
                     setToothNumberVisible(data.requires_tooth_number);
                     setShadeVisible(data.requires_shade);
                     setExtraFieldsVisibility(data.extra_fields || []);
+                    notes.restoration_type = data.display_note || '';
+                    lastMaterials = data.materials || [];
                     // Re-populate materials preserving current selection
                     updateSelect('id_material', data.materials, currentMaterial);
-                    // Then fetch products for the current material
+                    // Then fetch products for the current material (which fills
+                    // in material+product notes and re-renders).
                     if (currentMaterial) {
                         onMaterialChange(currentMaterial, currentProduct);
+                    } else {
+                        renderNotes();
                     }
                     // Load implant sizes if implant_type is set
                     if (implantTypeSelect && implantTypeSelect.value) {

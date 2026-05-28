@@ -106,6 +106,10 @@ class RestorationType(models.Model):
     requires_tooth_number = models.BooleanField(default=True)
     requires_shade = models.BooleanField(default=False)
     extra_fields = models.JSONField(default=list, blank=True)
+    display_note = models.TextField(
+        blank=True,
+        help_text="Shown on the restoration form when this type is selected. Leave blank for no note.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -126,6 +130,10 @@ class Material(models.Model):
         related_name="materials",
     )
     has_products = models.BooleanField(default=False)
+    display_note = models.TextField(
+        blank=True,
+        help_text="Shown on the restoration form when this material is selected. Leave blank for no note.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -144,6 +152,10 @@ class Product(models.Model):
         Material,
         on_delete=models.PROTECT,
         related_name="products",
+    )
+    display_note = models.TextField(
+        blank=True,
+        help_text="Shown on the restoration form when this product is selected. Leave blank for no note.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

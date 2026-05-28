@@ -135,6 +135,12 @@ visibility, mirroring the admin form's dynamic behavior.
   <label class="flex cursor-pointer items-center gap-2 text-sm">{{ restoration_form.gold_anodizing }} Gold Anodizing</label>
 </div>
 
+{# --- Notes from current selections (populated by restoration_form.js) --- #}
+<div id="restoration-notes" class="hidden rounded-md border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
+  <p class="font-semibold mb-2">Notes</p>
+  <div id="restoration-notes-list"></div>
+</div>
+
 {# --- Case note (always shown) --- #}
 <div class="field-case_note space-y-2">
   <label for="{{ restoration_form.case_note.id_for_label }}" class="label">Case Note</label>
