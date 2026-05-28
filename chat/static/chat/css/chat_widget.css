@@ -4,6 +4,11 @@
 
 #chat-widget { position: fixed; z-index: 60; }
 
+/* The HTML [hidden] attribute must beat the explicit `display:` rules below
+   (.chat-panel, .chat-view, .chat-form, .chat-iconbtn use flex). Without
+   this, toggling .hidden in JS has no visual effect and every view stacks. */
+#chat-widget [hidden] { display: none !important; }
+
 /* ── Collapsed toggle button ───────────────────────────────────────────── */
 .chat-toggle {
   position: fixed;

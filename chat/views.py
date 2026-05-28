@@ -301,6 +301,11 @@ def start_dm(request):
         .first()
     )
     if existing:
+        # If the DM was previously closed, reopen it transparently — users
+        # expect "message X again" to just work, and DMs are per-peer.
+        if existing.is_closed:
+            existing.is_closed = False
+            existing.save(update_fields=["is_closed", "updated_at"])
         return JsonResponse(
             {"conversation": _serialize_conv(existing, request.user)},
         )
