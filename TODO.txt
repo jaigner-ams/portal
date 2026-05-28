@@ -1,8 +1,8 @@
-Chat box
-Notes for certain selections
-Ti-Base Type ->  Scan Flag/Body Brand
 Tooth number sheet
 Make print button that prints the script and maybe editable... 
 shipment tracking -- how does it work
 notification system for when stuff gets cancelled
 
+Chat box
+Ti-Base Type ->  Scan Flag/Body Brand
+Notes for certain selections

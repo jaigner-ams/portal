@@ -34,3 +34,5 @@ Thumbs.db
 
 # Local deploy secrets (Cloudflare creds, etc.)
 .deploy.env
+
+*.swp
