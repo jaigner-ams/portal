@@ -6,4 +6,5 @@ mysqlclient==2.2.8
 packaging==26.2
 python-decouple==3.8
 redis==5.2.1
+sentry-sdk[django]==2.60.0
 sqlparse==0.5.5
