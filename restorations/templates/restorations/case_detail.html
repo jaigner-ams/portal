@@ -33,6 +33,7 @@
         </button>
       </form>
       {% endif %}
+      <a href="{% url 'restorations:case-print' case.pk %}" target="_blank" class="btn-secondary btn-sm">Print</a>
       <a href="{% url 'restorations:case-new' %}" class="btn-secondary btn-sm">Start new case</a>
     </div>
   </div>

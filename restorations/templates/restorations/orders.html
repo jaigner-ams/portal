@@ -79,6 +79,7 @@
               </button>
             </form>
             {% endif %}
+            <a href="{% url 'restorations:case-print' case.pk %}" target="_blank" class="btn-ghost btn-sm">Print</a>
             <a href="{% url 'restorations:case-detail' case.pk %}" class="btn-ghost btn-sm">View case</a>
           </div>
         </div>

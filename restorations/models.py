@@ -382,6 +382,51 @@ class Restoration(models.Model):
             parts.append(str(self.material))
         return " — ".join(parts)
 
+    # Field classification for `extras_for_display`. Kept in sync with the form
+    # in forms.py — booleans render as flags (label only when True), choice
+    # fields use the human display value, FKs render via __str__, ints/texts
+    # render as "Label: value" when set.
+    _EXTRA_BOOLS = {
+        "add_blocker", "stain_and_glaze", "include_tibase", "assembled_bonded",
+        "is_screw_retained", "vertex_articulator", "gold_anodizing",
+    }
+    _EXTRA_CHOICES = {"design_service", "model_type", "arches", "size"}
+    _EXTRA_FKS = {"implant_type", "implant_size", "tibase_type"}
+    _EXTRA_INTS = {"number_of_units", "extra_separate_dies"}
+    _EXTRA_TEXTS = {"bar_details", "model_unit_details"}
+
+    def extras_for_display(self):
+        """Human-readable list of the type-specific extras set on this row.
+
+        Returns a list of strings ready for ``|join:" · "`` in templates.
+        Only fields enabled by ``restoration_type.extra_fields`` are considered.
+        """
+        if not self.restoration_type_id:
+            return []
+        out = []
+        for field in (self.restoration_type.extra_fields or []):
+            label = EXTRA_FIELD_CHOICES.get(field, field)
+            if field in self._EXTRA_BOOLS:
+                if getattr(self, field, False):
+                    out.append(label)
+            elif field in self._EXTRA_CHOICES:
+                disp = getattr(self, f"get_{field}_display", lambda: "")()
+                if disp:
+                    out.append(f"{label}: {disp}")
+            elif field in self._EXTRA_FKS:
+                obj = getattr(self, field, None)
+                if obj:
+                    out.append(f"{label}: {obj}")
+            elif field in self._EXTRA_INTS:
+                v = getattr(self, field, None)
+                if v is not None:
+                    out.append(f"{label}: {v}")
+            elif field in self._EXTRA_TEXTS:
+                v = getattr(self, field, "")
+                if v:
+                    out.append(f"{label}: {v}")
+        return out
+
 
 class RestorationFile(models.Model):
     restoration = models.ForeignKey(

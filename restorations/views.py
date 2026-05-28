@@ -116,6 +116,37 @@ def orders(request):
 
 
 @login_required
+def case_print(request, pk):
+    """Standalone print-friendly view of a single case.
+
+    Lab can print their own cases (draft or submitted); admins/staff can
+    print any case. The template is black-and-white, sized so the content
+    fits in the top half of a portrait letter sheet — fold the paper in half
+    along the horizontal midpoint and the printed side is visible.
+    """
+    case = get_object_or_404(
+        Case.objects.select_related("created_by")
+        .prefetch_related(
+            "restorations__restoration_type",
+            "restorations__material",
+            "restorations__product",
+            "restorations__shade",
+            "restorations__implant_type",
+            "restorations__implant_size",
+            "restorations__tibase_type",
+        ),
+        pk=pk,
+    )
+    user = request.user
+    if user.is_lab:
+        if case.created_by_id != user.id:
+            return HttpResponseForbidden("Not your case.")
+    elif not (user.is_admin or user.is_staff_role):
+        return HttpResponseForbidden("Cannot print this case.")
+    return render(request, "restorations/case_print.html", {"case": case})
+
+
+@login_required
 @require_POST
 def submit_case(request, pk):
     """Lab submits a draft case so admins/staff can see it in Orders."""
