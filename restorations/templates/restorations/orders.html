@@ -54,7 +54,12 @@
               {% if case.mill_priority %} · {{ case.get_mill_priority_display }}{% endif %}
               · Created {{ case.created_at|date:"M j, Y" }}
               {% if not is_lab_view %}
-                · Lab: <span class="font-medium text-foreground">{{ case.created_by.get_full_name|default:case.created_by.username|default:"—" }}</span>
+                · Lab:
+                {% if case.created_by %}
+                  <span class="font-medium text-foreground">{{ case.created_by.get_full_name|default:case.created_by.username }}</span>
+                {% else %}
+                  <span class="text-muted-foreground">—</span>
+                {% endif %}
               {% endif %}
             </p>
           </div>
