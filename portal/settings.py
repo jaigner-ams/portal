@@ -125,8 +125,10 @@ if REDIS_URL:
     # existing DB sessions remain valid — no one is logged out by enabling this.
     SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
-# Sentry — shares the fusion app's DSN/project, so both apps' errors land in
-# the same Sentry view. The `app` tag lets the Sentry UI separate them.
+# Sentry — shares the fusion app's DSN/project. We use a portal-specific
+# `environment` value (rather than just "production") so the Sentry UI's
+# top-level environment filter can separate this app's events from fusion's,
+# which run under environment='production'.
 # Only initialized when SENTRY_DSN is set, so a host without the env var
 # still boots cleanly (same defensive pattern as the Redis block above).
 _SENTRY_DSN = config('SENTRY_DSN', default='')
@@ -135,12 +137,11 @@ if _SENTRY_DSN:
     from django.core.exceptions import DisallowedHost
     sentry_sdk.init(
         dsn=_SENTRY_DSN,
-        environment='production' if not DEBUG else 'development',
+        environment='portal-prod' if not DEBUG else 'portal-dev',
         traces_sample_rate=0.1,
         send_default_pii=False,
         ignore_errors=[DisallowedHost],
     )
-    sentry_sdk.set_tag('app', 'portal')
 
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
