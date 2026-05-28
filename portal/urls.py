@@ -23,4 +23,5 @@ urlpatterns = [
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('', include('core.urls')),
     path('restorations/', include('restorations.urls', namespace='restorations')),
+    path('chat/', include('chat.urls', namespace='chat')),
 ]

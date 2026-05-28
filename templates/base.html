@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% load static %}{% static 'core/css/styles.css' %}">
+  {% if user.is_authenticated %}
+  <link rel="stylesheet" href="{% static 'chat/css/chat_widget.css' %}">
+  {% endif %}
   {% block extra_head %}{% endblock %}
 </head>
 <body class="h-full bg-background font-sans antialiased">
@@ -109,6 +112,11 @@
   <main class="{% if user.is_authenticated %}mx-auto max-w-screen-xl px-4 py-8 sm:px-6 lg:px-8{% endif %}">
     {% block content %}{% endblock %}
   </main>
+
+  {% if user.is_authenticated %}
+  {% include "chat/_widget.html" %}
+  <script src="{% static 'chat/js/chat_widget.js' %}"></script>
+  {% endif %}
 
   {% block extra_js %}{% endblock %}
 </body>

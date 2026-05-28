@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'accounts',
     'core',
     'restorations',
+    'chat',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

@@ -2,6 +2,7 @@
 module.exports = {
   content: [
     "../accounts/templates/**/*.html",
+    "../chat/templates/**/*.html",
     "../core/templates/**/*.html",
     "../portal/templates/**/*.html",
     "../restorations/templates/**/*.html",
